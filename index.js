@@ -1,7 +1,10 @@
 "use strict"
 
+const config = require('./config');
+
 const mqtt = require('mqtt');
-const client = mqtt.connect('mqtt://10.10.180.208');
+const client  = mqtt.connect(config.mqttUrl);
+//const client = mqtt.connect('mqtt://10.10.180.208');
 const SerialPort = require('serialport');
 const Readline = SerialPort.parsers.Readline;
 let firstFlag = false;
@@ -9,8 +12,8 @@ let word = '';
 
 
 
-const port = new SerialPort('/dev/ttyACM0', {
-	baudRate: 9600,
+const port = new SerialPort(config.serialPort, {
+	baudRate: config.baudRate,
 	//parser: new SerialPort.parsers.Readline('\r\n')
 });
 
@@ -34,14 +37,17 @@ port.on('data', function(data) {
 		} else if(firstFlag && temp.charAt(i) == '#') {
 			//console.log('2');
 			firstFlag = false;
-			//console.log(word);
-			client.publish('temperature', word);
+			
+			const data = word.split(';');
+			console.log(data);
+			client.publish('aegisflanker/temperature', data[0]);
+			client.publish('aegisflanker/humidity', data[1]);
 			word = "";
 			
 		} else {
 			//console.log('3');
 			word += temp.charAt(i) ;
-			console.log(word);
+			//console.log(word);
 		}
 	}
 
